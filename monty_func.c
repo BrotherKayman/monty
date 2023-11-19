@@ -1,5 +1,16 @@
 #include "monty.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define MAX_LINE_LENGTH 1024
+
+/**
+ * Rest of your function declarations and global variables...
+ */
+
 /**
  * @brief Parses a line for an opcode and arguments.
  *
@@ -15,19 +26,26 @@ char *parse_line(char *line, stack_t **stack, unsigned int line_number) {
     push = "push";
     op_code = strtok(line, "\n ");
     if (op_code == NULL)
-        return (NULL);
+        return NULL;
 
     if (strcmp(op_code, push) == 0) {
         arg = strtok(NULL, "\n ");
-        if (isnumber(arg) == 1 && arg != NULL) {
-            var_global.push_arg = atoi(arg);
+        if (arg != NULL) {
+            int number = atoi(arg);
+            if (number != 0 || strcmp(arg, "0") == 0) {
+                var_global.push_arg = number;
+            } else {
+                fprintf(stderr, "L%d: usage: push integer\n", line_number);
+                exit(EXIT_FAILURE);
+            }
         } else {
-            fprintf(stderr, "L%d: usage: push integer\n", line_number);
+            fprintf(stderr, "L%d: usage: push requires an argument\n", line_number);
             exit(EXIT_FAILURE);
         }
     }
-    return (op_code);
+    return op_code;
 }
+
 
 /**
  * @brief Checks if a string is a number.
@@ -53,6 +71,45 @@ int isnumber(char *str) {
     return (1);
 }
 
+ssize_t _getline(char **lineptr, size_t *n, FILE *stream) 
+{
+    size_t capacity = 128;
+    size_t index = 0;
+    int ch;
+
+    if (*lineptr == NULL) 
+    {
+        *lineptr = malloc(capacity * sizeof(char));
+        if (*lineptr == NULL) 
+        {
+            return (-1);
+        }
+        *n = capacity;
+    }
+
+    while ((ch = fgetc(stream)) != EOF && ch != '\n') 
+    {
+        (*lineptr)[index++] = (char)ch;
+        if (index >= *n) {
+            *n += capacity;
+            *lineptr = realloc(*lineptr, *n);
+            if (*lineptr == NULL) 
+            {
+                return (-1);
+            }
+        }
+    }
+
+    if (ch == EOF && index == 0) 
+    {
+        return (-1);
+    }
+
+    (*lineptr)[index] = '\0';
+    return (index);
+}
+
+
 /**
  * @brief Reads a bytecode file and runs commands.
  *
@@ -60,6 +117,7 @@ int isnumber(char *str) {
  * @param stack Pointer to the top of the stack.
  */
 void read_file(char *filename, stack_t **stack) {
+    int check;
     char *line;
     size_t i = 0;
     int line_count = 1;
@@ -73,7 +131,7 @@ void read_file(char *filename, stack_t **stack) {
         exit(EXIT_FAILURE);
     }
 
-    while ((read = getline(&var_global.buffer, &i, var_global.file)) != -1) {
+    while ((read = _getline(&var_global.buffer, &i, var_global.file)) != -1) {
         line = parse_line(var_global.buffer, stack, line_count);
         if (line == NULL || line[0] == '#') {
             line_count++;
@@ -89,7 +147,7 @@ void read_file(char *filename, stack_t **stack) {
     }
 
     free(var_global.buffer);
-    int check = fclose(var_global.file);
+    check = fclose(var_global.file);
     if (check == -1)
         exit(-1);
 }

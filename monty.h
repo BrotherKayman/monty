@@ -67,6 +67,9 @@ void _nop(stack_t **stack, unsigned int line_number);
 void _rotl(stack_t **stack, unsigned int line_number);
 void _rotr(stack_t **stack, unsigned int line_number);
 
+/* Custom Functions */
+ssize_t _getline(char **lineptr, size_t *n, FILE *stream);
+
 /* String ASCII Functions */
 void _pchar(stack_t **stack, unsigned int line_number);
 void _pstr(stack_t **stack, unsigned int line_number);
